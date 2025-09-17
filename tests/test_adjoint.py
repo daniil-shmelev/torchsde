@@ -19,6 +19,7 @@ sys.path = sys.path[1:]  # A hack so that we always import the installed library
 
 import pytest
 import torch
+import numpy as np
 import torchsde
 from torchsde.settings import LEVY_AREA_APPROXIMATIONS, METHODS, NOISE_TYPES, SDE_TYPES
 
@@ -26,6 +27,7 @@ from . import utils
 from . import problems
 
 torch.manual_seed(1147481649)
+np.random.seed(1147481649) # Generator in BrownianInterval uses numpy
 torch.set_default_dtype(torch.float64)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 dtype = torch.get_default_dtype()
@@ -73,6 +75,14 @@ def test_against_numerical(sde_cls, sde_type, method, options, adaptive):
         tol = 1e-6
         adjoint_method = METHODS.adjoint_reversible_heun
         adjoint_options = options
+    elif method == METHODS.ees25:
+        tol = 1e-6
+        adjoint_method = METHODS.adjoint_ees25
+        adjoint_options = options
+    elif method == METHODS.ees27:
+        tol = 1e-6
+        adjoint_method = METHODS.adjoint_ees27
+        adjoint_options = options
     else:
         tol = 1e-2
         adjoint_method = None
@@ -90,7 +100,7 @@ def test_against_numerical(sde_cls, sde_type, method, options, adaptive):
 
 def _methods_dt_tol():
     for sde_type, method, options in _methods():
-        if method == METHODS.reversible_heun:
+        if method in (METHODS.reversible_heun, METHODS.ees25, METHODS.ees27):
             yield sde_type, method, options, 2**-3, 1e-3, 1e-4
             yield sde_type, method, options, 1e-3, 1e-3, 1e-4
         else:
@@ -131,6 +141,12 @@ def test_against_sdeint(sde_cls, sde_type, method, options, dt, rtol, atol, len_
 
     if method == METHODS.reversible_heun:
         adjoint_method = METHODS.adjoint_reversible_heun
+        adjoint_options = options
+    elif method == METHODS.ees25:
+        adjoint_method = METHODS.adjoint_ees25
+        adjoint_options = options
+    elif method == METHODS.ees27:
+        adjoint_method = METHODS.adjoint_ees27
         adjoint_options = options
     else:
         adjoint_method = None

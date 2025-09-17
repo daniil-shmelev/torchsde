@@ -58,6 +58,8 @@ def seq_add(*seqs):
 def seq_sub(xs, ys):
     return [x - y for x, y in zip(xs, ys)]
 
+def seq_mul(x, ys):
+    return [x * y for y in ys]
 
 def batch_mvp(m, v):
     return torch.bmm(m, v.unsqueeze(-1)).squeeze(dim=-1)

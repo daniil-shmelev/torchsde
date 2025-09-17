@@ -25,6 +25,11 @@ from .._brownian import BaseBrownian, ReverseBrownian
 from ..settings import METHODS, NOISE_TYPES, SDE_TYPES
 from ..types import Any, Dict, Optional, Scalar, Tensor, Tensors, TensorOrTensors, Vector
 
+adj_ = {
+        METHODS.reversible_heun : METHODS.adjoint_reversible_heun,
+        METHODS.ees25 : METHODS.adjoint_ees25,
+        METHODS.ees27 : METHODS.adjoint_ees27
+    }
 
 class _SdeintAdjointMethod(torch.autograd.Function):
 
@@ -51,7 +56,7 @@ class _SdeintAdjointMethod(torch.autograd.Function):
         extra_solver_state = tuple(x.detach() for x in extra_solver_state)
         ys, extra_solver_state = solver.integrate(y0, ts, extra_solver_state)
 
-        if method == METHODS.reversible_heun and adjoint_method == METHODS.adjoint_reversible_heun:
+        if method in adj_ and adjoint_method == adj_[method]:
             ctx.saved_extras_for_backward = True
             extras_for_backward = extra_solver_state
         else:
@@ -240,9 +245,9 @@ def sdeint_adjoint(sde: nn.Module,
 
     # Note that all of these warnings are only applicable for reversible solvers with sdeint_adjoint; none of them
     # apply to sdeint.
-    if method == METHODS.reversible_heun:
-        if adjoint_method != METHODS.adjoint_reversible_heun:
-            warnings.warn(f"method={repr(method)}, but adjoint_method!={repr(METHODS.adjoint_reversible_heun)}.")
+    if method in adj_:
+        if adjoint_method != adj_[method]:
+            warnings.warn(f"method={repr(method)}, but adjoint_method!={repr(adj_[method])}.")
         if adaptive or adjoint_adaptive:
             warnings.warn(f"A limitation of the current method={repr(method)} implementation is "
                           f"that it does not save the time steps used. This means that it may not be perfectly "
@@ -282,8 +287,8 @@ def _select_default_adjoint_method(sde: base_sde.ForwardSDE, method: str, adjoin
     """Select the default method for adjoint computation based on the noise type of the forward SDE."""
     if adjoint_method is not None:
         return adjoint_method
-    elif method == METHODS.reversible_heun:
-        return METHODS.adjoint_reversible_heun
+    elif method in adj_:
+        return adj_[method]
     else:
         return {
             SDE_TYPES.ito: {

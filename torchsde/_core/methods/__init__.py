@@ -19,6 +19,7 @@ from .log_ode import LogODEMidpoint
 from .midpoint import Midpoint
 from .milstein import MilsteinIto, MilsteinStratonovich
 from .reversible_heun import ReversibleHeun, AdjointReversibleHeun
+from .ees import EES25, EES27, AdjointEES25, AdjointEES27
 from .srk import SRK
 from ...settings import METHODS, SDE_TYPES
 
@@ -36,6 +37,14 @@ def select(method, sde_type):
         return ReversibleHeun
     elif method == METHODS.adjoint_reversible_heun:
         return AdjointReversibleHeun
+    elif method == METHODS.ees25:
+        return EES25
+    elif method == METHODS.adjoint_ees25:
+        return AdjointEES25
+    elif method == METHODS.ees27:
+        return EES27
+    elif method == METHODS.adjoint_ees27:
+        return AdjointEES27
     elif method == METHODS.heun:
         return Heun
     elif method == METHODS.milstein and sde_type == SDE_TYPES.stratonovich:
