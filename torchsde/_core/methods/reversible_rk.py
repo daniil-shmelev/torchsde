@@ -38,7 +38,10 @@ def ERK_step_function_backprop(A, b, t0, adj_y0, y1, dt, dW, f_and_g, prod, adjo
     c = [sum(A[i][j] for j in range(i)) for i in range(s)]
     f_k = [] # f(k_i)
     g_k = [] # g(k_i)
-    dfdy = [] #df/dk[i] * dk/dy[i]
+    k = []
+
+    dLdf = []
+    dLdk = [None for _ in range(s)]
 
     for i in range(s):
         # We need to reconstruct k here
@@ -46,33 +49,37 @@ def ERK_step_function_backprop(A, b, t0, adj_y0, y1, dt, dW, f_and_g, prod, adjo
         k1 = sum(A[i][j] * g_k[j] for j in range(i))
         if not isinstance(k1, int):  # prod doesn't like when k1 : int = 0
             k1 = prod(k1, dW)
-        k = y1 + k0 + k1
+        k_val = y1 + k0 + k1
 
         with torch.enable_grad():
-            if not k.requires_grad:
-                k = k.detach().requires_grad_()
-            f_k_val, g_k_val = f_and_g(t0 + c[i] * dt, k)
+            if not k_val.requires_grad:
+                k_val = k_val.detach().requires_grad_()
+            f_k_val, g_k_val = f_and_g(t0 + c[i] * dt, k_val)
             f_k.append(f_k_val)
             g_k.append(g_k_val)
 
-            f_k_ones = torch.ones(size=y1.shape, device=y1.device) * dt
-            g_k_ones = adjoint_of_prod(torch.ones(size=y1.shape, device=y1.device), dW)
-
-            dfdk_val, *dfdp_val = misc.vjp(outputs=(f_k_val, g_k_val),
-                                          inputs=[k] + sde_params,
-                                          grad_outputs=[f_k_ones, g_k_ones],
-                                          allow_unused=True,
-                                          retain_graph=True,
-                                          create_graph=requires_grad)
+            k.append(k_val)
 
 
-        adj_params = misc.seq_add(adj_params, dfdp_val)
+    for i in range(s-1, -1, -1):
+        # Append [dLdf, dLdg]
+        adj_1 = adj_y0 * b[i] + sum(A[j][i] * dLdk[j] for j in range(i+1, s))
+        dLdf_val = [adj_1 * dt, adjoint_of_prod(adj_1, dW)]
+        dLdf.append(dLdf_val)
 
-        dkdy_val = 1. + sum(A[i][j] * dfdy[j] for j in range(i))
+        # Get dLdk and dLdp
+        dLdk[i], *dLdp_val = misc.vjp(outputs=(f_k[i], g_k[i]),
+                                      inputs=[k[i]] + sde_params,
+                                      grad_outputs=dLdf_val,
+                                      allow_unused=True,
+                                      retain_graph=True,
+                                      create_graph=requires_grad)
 
-        dfdy.append(dfdk_val * dkdy_val)
+        adj_params = misc.seq_add(adj_params, dLdp_val)
 
-    return (1. + sum(b[i] * dfdy[i] for i in range(s))) * adj_y0, adj_params
+    adj_y1 = adj_y0 + sum(dLdk)
+
+    return adj_y1, adj_params
 
 
 class ReversibleERK(base_solver.BaseSDESolver):
