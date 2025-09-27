@@ -38,6 +38,8 @@ def _methods():
     yield SDE_TYPES.ito, METHODS.srk, None
     yield SDE_TYPES.stratonovich, METHODS.midpoint, None
     yield SDE_TYPES.stratonovich, METHODS.reversible_heun, None
+    yield SDE_TYPES.stratonovich, METHODS.ees25, None
+    yield SDE_TYPES.stratonovich, METHODS.ees27, None
 
 
 @pytest.mark.parametrize("sde_cls", [problems.ExDiagonal, problems.ExScalar, problems.ExAdditive,

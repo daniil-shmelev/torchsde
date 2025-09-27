@@ -1,7 +1,10 @@
 """EES methods from
 
 https://arxiv.org/abs/2507.21006
+https://arxiv.org/abs/2509.20599
 
+EES methods are algebraically reversible solvers which are more stable than existing
+methods such as Reversible Heun.
 """
 
 from .tableaus import ees

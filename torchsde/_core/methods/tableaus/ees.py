@@ -1,3 +1,6 @@
+# EES methods from:
+# https://arxiv.org/abs/2507.21006
+
 A25 = (
     (),
     (1./3,),
