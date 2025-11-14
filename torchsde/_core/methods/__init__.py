@@ -20,6 +20,7 @@ from .midpoint import Midpoint
 from .milstein import MilsteinIto, MilsteinStratonovich
 from .reversible_heun import ReversibleHeun, AdjointReversibleHeun
 from .ees import EES25, EES27, AdjointEES25, AdjointEES27
+from .mccallum_foster import MCFEuler, AdjointMCFEuler, MCFMidpoint, AdjointMCFMidpoint, MCFRK3, AdjointMCFRK3, MCFRK4, AdjointMCFRK4
 from .srk import SRK
 from ...settings import METHODS, SDE_TYPES
 
@@ -45,6 +46,22 @@ def select(method, sde_type):
         return EES27
     elif method == METHODS.adjoint_ees27:
         return AdjointEES27
+    elif method == METHODS.mcf_euler:
+        return MCFEuler
+    elif method == METHODS.adjoint_mcf_euler:
+        return AdjointMCFEuler
+    elif method == METHODS.mcf_midpoint:
+        return MCFMidpoint
+    elif method == METHODS.adjoint_mcf_midpoint:
+        return AdjointMCFMidpoint
+    elif method == METHODS.mcf_rk3:
+        return MCFRK3
+    elif method == METHODS.adjoint_mcf_rk3:
+        return AdjointMCFRK3
+    elif method == METHODS.mcf_rk4:
+        return MCFRK4
+    elif method == METHODS.adjoint_mcf_rk4:
+        return AdjointMCFRK4
     elif method == METHODS.heun:
         return Heun
     elif method == METHODS.milstein and sde_type == SDE_TYPES.stratonovich:

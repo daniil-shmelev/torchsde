@@ -28,7 +28,11 @@ from ..types import Any, Dict, Optional, Scalar, Tensor, Tensors, TensorOrTensor
 adj_ = {
         METHODS.reversible_heun : METHODS.adjoint_reversible_heun,
         METHODS.ees25 : METHODS.adjoint_ees25,
-        METHODS.ees27 : METHODS.adjoint_ees27
+        METHODS.ees27 : METHODS.adjoint_ees27,
+        METHODS.mcf_euler : METHODS.adjoint_mcf_euler,
+        METHODS.mcf_midpoint : METHODS.adjoint_mcf_midpoint,
+        METHODS.mcf_rk3 : METHODS.adjoint_mcf_rk3,
+        METHODS.mcf_rk4 : METHODS.adjoint_mcf_rk4
     }
 
 class _SdeintAdjointMethod(torch.autograd.Function):

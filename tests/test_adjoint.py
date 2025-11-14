@@ -40,6 +40,10 @@ def _methods():
     yield SDE_TYPES.stratonovich, METHODS.reversible_heun, None
     yield SDE_TYPES.stratonovich, METHODS.ees25, None
     yield SDE_TYPES.stratonovich, METHODS.ees27, None
+    yield SDE_TYPES.stratonovich, METHODS.mcf_euler, {'lam' : 0.99}
+    yield SDE_TYPES.stratonovich, METHODS.mcf_midpoint, {'lam': 0.99}
+    yield SDE_TYPES.stratonovich, METHODS.mcf_rk3, {'lam': 0.99}
+    yield SDE_TYPES.stratonovich, METHODS.mcf_rk4, {'lam': 0.99}
 
 
 @pytest.mark.parametrize("sde_cls", [problems.ExDiagonal, problems.ExScalar, problems.ExAdditive,
@@ -149,6 +153,18 @@ def test_against_sdeint(sde_cls, sde_type, method, options, dt, rtol, atol, len_
         adjoint_options = options
     elif method == METHODS.ees27:
         adjoint_method = METHODS.adjoint_ees27
+        adjoint_options = options
+    elif method == METHODS.mcf_euler:
+        adjoint_method = METHODS.adjoint_mcf_euler
+        adjoint_options = options
+    elif method == METHODS.mcf_midpoint:
+        adjoint_method = METHODS.adjoint_mcf_midpoint
+        adjoint_options = options
+    elif method == METHODS.mcf_rk3:
+        adjoint_method = METHODS.adjoint_mcf_rk3
+        adjoint_options = options
+    elif method == METHODS.mcf_rk4:
+        adjoint_method = METHODS.adjoint_mcf_rk4
         adjoint_options = options
     else:
         adjoint_method = None
