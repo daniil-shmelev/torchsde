@@ -47,8 +47,11 @@ def ERK_step_function_backprop(A, b, c, t0, adj_y0, y1, dt, dW, f_and_g, prod, a
         k_val = y1 + k0 + k1
 
         with torch.enable_grad():
-            if not k_val.requires_grad:
-                k_val = k_val.detach().requires_grad_()
+            # Must always detach: k_val for i>0 has a grad path back to sde_params
+            # via earlier f_k/g_k. If we don't cut that path, the vjp at stage i
+            # double-counts the indirect contribution to grad(theta) — once directly,
+            # once again through k_val.
+            k_val = k_val.detach().requires_grad_()
             f_k_val, g_k_val = f_and_g(t0 + c[i] * dt, k_val)
             f_k.append(f_k_val)
             g_k.append(g_k_val)
